@@ -52,9 +52,9 @@ constructor(
                                     ),
                                 )
                                 summaryPage = SearchSummaryPage(
-                                    summaries = filteredPage.summaries.mapNotNull { summary ->
+                                    summaries = filteredPage.summaries.map { summary ->
                                         val filteredItems = summary.items.filterWhitelisted(database)
-                                        if (filteredItems.isEmpty()) null else summary.copy(items = filteredItems)
+                                        summary.copy(items = filteredItems)
                                     }
                                 )
                             }.onFailure {
