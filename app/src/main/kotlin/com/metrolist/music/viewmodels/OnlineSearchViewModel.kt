@@ -33,7 +33,16 @@ constructor(
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val query = savedStateHandle.get<String>("query")!!
-    val filter = MutableStateFlow<YouTube.SearchFilter?>(null)
+    private val initialFilter = savedStateHandle.get<String>("filter")?.let { filterParam ->
+        when (filterParam) {
+            "albums" -> YouTube.SearchFilter.FILTER_ALBUM
+            "songs" -> YouTube.SearchFilter.FILTER_SONG
+            "artists" -> YouTube.SearchFilter.FILTER_ARTIST
+            "playlists" -> YouTube.SearchFilter.FILTER_COMMUNITY_PLAYLIST
+            else -> null
+        }
+    }
+    val filter = MutableStateFlow<YouTube.SearchFilter?>(initialFilter)
     var summaryPage by mutableStateOf<SearchSummaryPage?>(null)
     val viewStateMap = mutableStateMapOf<String, ItemsPage?>()
 

@@ -200,7 +200,22 @@ fun OnlineSearchResult(
             searchSummary?.summaries?.forEach { summary ->
                 if (summary.items.isNotEmpty()) {
                     item {
-                        NavigationTitle(summary.title)
+                        NavigationTitle(
+                            title = summary.title,
+                            onClick = {
+                                val filter = when (summary.title) {
+                                    "Albums" -> FILTER_ALBUM
+                                    "Songs" -> FILTER_SONG
+                                    else -> null
+                                }
+                                filter?.let {
+                                    viewModel.filter.value = it
+                                    coroutineScope.launch {
+                                        lazyListState.animateScrollToItem(0)
+                                    }
+                                }
+                            }
+                        )
                     }
 
                     items(

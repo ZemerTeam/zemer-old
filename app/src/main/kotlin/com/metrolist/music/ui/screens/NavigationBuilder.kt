@@ -121,11 +121,16 @@ fun NavGraphBuilder.navigationBuilder(
         )
     }
     composable(
-        route = "search/{query}",
+        route = "search/{query}?filter={filter}",
         arguments =
         listOf(
             navArgument("query") {
                 type = NavType.StringType
+            },
+            navArgument("filter") {
+                type = NavType.StringType
+                nullable = true
+                defaultValue = null
             },
         ),
         enterTransition = {

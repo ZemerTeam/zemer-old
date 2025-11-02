@@ -456,11 +456,12 @@ fun ArtistScreen(
                 if (showLocal) {
                     if (librarySongs.isNotEmpty()) {
                         item(key = "local_songs_title") {
+                            val artistName = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: ""
                             NavigationTitle(
                                 title = stringResource(R.string.songs),
                                 modifier = Modifier.animateItem(),
                                 onClick = {
-                                    navController.navigate("artist/${viewModel.artistId}/songs")
+                                    navController.navigate("search/${java.net.URLEncoder.encode(artistName, "UTF-8")}?filter=songs")
                                 }
                             )
                         }
@@ -531,11 +532,12 @@ fun ArtistScreen(
 
                     if (libraryAlbums.isNotEmpty()) {
                         item(key = "local_albums_title") {
+                            val artistName = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: ""
                             NavigationTitle(
                                 title = stringResource(R.string.albums),
                                 modifier = Modifier.animateItem(),
                                 onClick = {
-                                    navController.navigate("artist/${viewModel.artistId}/albums")
+                                    navController.navigate("search/${java.net.URLEncoder.encode(artistName, "UTF-8")}?filter=albums")
                                 }
                             )
                         }
@@ -584,14 +586,31 @@ fun ArtistScreen(
                     artistPage?.sections?.fastForEach { section ->
                         if (section.items.isNotEmpty()) {
                             item(key = "section_${section.title}") {
+                                val artistName = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: ""
                                 NavigationTitle(
                                     title = section.title,
                                     modifier = Modifier.animateItem(),
-                                    onClick = section.moreEndpoint?.let {
-                                        {
-                                            navController.navigate(
-                                                "artist/${viewModel.artistId}/items?browseId=${it.browseId}?params=${it.params}",
-                                            )
+                                    onClick = when (section.title) {
+                                        "Albums" -> {
+                                            {
+                                                navController.navigate(
+                                                    "search/${java.net.URLEncoder.encode(artistName, "UTF-8")}?filter=albums"
+                                                )
+                                            }
+                                        }
+                                        "Songs" -> {
+                                            {
+                                                navController.navigate(
+                                                    "search/${java.net.URLEncoder.encode(artistName, "UTF-8")}?filter=songs"
+                                                )
+                                            }
+                                        }
+                                        else -> section.moreEndpoint?.let {
+                                            {
+                                                navController.navigate(
+                                                    "artist/${viewModel.artistId}/items?browseId=${it.browseId}?params=${it.params}",
+                                                )
+                                            }
                                         }
                                     },
                                 )
