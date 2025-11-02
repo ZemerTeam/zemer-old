@@ -31,25 +31,7 @@ fun IntegrationScreen(
             .windowInsetsPadding(LocalPlayerAwareWindowInsets.current)
             .verticalScroll(rememberScrollState()),
     ) {
-        PreferenceGroupTitle(title = stringResource(R.string.general))
-
-        PreferenceEntry(
-            title = { Text(stringResource(R.string.discord_integration)) },
-            icon = { Icon(painterResource(R.drawable.discord), null) },
-            onClick = {
-                navController.navigate("settings/integrations/discord")
-            }
-        )
-
-        PreferenceEntry(
-            title = { Text(stringResource(R.string.lastfm_integration)) },
-            icon = { Icon(painterResource(R.drawable.music_note), null) },
-            onClick = {
-                navController.navigate("settings/integrations/lastfm")
-            }
-        )
-
-
+        // No integrations available at the moment
     }
 
     TopAppBar(

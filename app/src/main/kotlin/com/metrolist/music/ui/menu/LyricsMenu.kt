@@ -318,18 +318,6 @@ fun LyricsMenu(
         }
     }
 
-    var showRomanizationDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var showRomanization by rememberSaveable { mutableStateOf(false) }
-    var isChecked by remember { mutableStateOf(songProvider()?.romanizeLyrics ?: true) }
-
-    // Sync isChecked with song changes
-    LaunchedEffect(songProvider()) {
-        isChecked = songProvider()?.romanizeLyrics ?: true
-    }
-    
     val configuration = LocalConfiguration.current
     val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
 
@@ -392,83 +380,5 @@ fun LyricsMenu(
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 16.dp)
             )
         }
-
-        item {
-            ListItem(
-                headlineContent = { Text(text = stringResource(R.string.romanize_current_track)) },
-                leadingContent = {
-                    Icon(
-                        painter = painterResource(R.drawable.language_korean_latin),
-                        contentDescription = null,
-                    )
-                },
-                trailingContent = {
-                    Switch(
-                        checked = isChecked,
-                        onCheckedChange = { newCheckedState ->
-                            isChecked = newCheckedState
-                            songProvider()?.let { song ->
-                                database.query {
-                                    upsert(song.copy(romanizeLyrics = newCheckedState))
-                                }
-                            }
-                        }
-                    )
-                },
-                modifier = Modifier.clickable {
-                    isChecked = !isChecked
-                    songProvider()?.let { song ->
-                        database.query {
-                            upsert(song.copy(romanizeLyrics = isChecked))
-                        }
-                    }
-                }
-            )
-        }
     }
-    /* if (showRomanizationDialog) {
-        var isChecked by remember { mutableStateOf(songProvider()?.romanizeLyrics ?: true) }
-
-        // Sync with song changes
-        LaunchedEffect(songProvider()) {
-            isChecked = songProvider()?.romanizeLyrics ?: true
-        }
-
-        DefaultDialog(
-            onDismiss = { showRomanizationDialog = false },
-            title = { Text(stringResource(R.string.romanization)) }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        // Toggle isChecked when the row is clicked
-                        isChecked = !isChecked
-                        songProvider()?.let { song ->
-                            database.query {
-                                upsert(song.copy(romanizeLyrics = isChecked))
-                            }
-                        }
-                    }
-                    .padding(vertical = 8.dp, horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.romanize_current_track),
-                    modifier = Modifier.weight(1f)
-                )
-                Switch(
-                    checked = isChecked,
-                    onCheckedChange = { newCheckedState ->
-                        isChecked = newCheckedState
-                        songProvider()?.let { song ->
-                            database.query {
-                                upsert(song.copy(romanizeLyrics = newCheckedState))
-                            }
-                        }
-                    }
-                )
-            }
-        }
-    } */
 }
