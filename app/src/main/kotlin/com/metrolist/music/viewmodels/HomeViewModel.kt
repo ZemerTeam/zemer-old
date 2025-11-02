@@ -30,6 +30,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import timber.log.Timber
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -158,9 +161,25 @@ class HomeViewModel @Inject constructor(
             val albums = mutableListOf<com.metrolist.innertube.models.AlbumItem>()
             val artists = mutableListOf<com.metrolist.innertube.models.ArtistItem>()
 
-            // Fetch artist pages and extract content
-            randomArtistIds.take(15).forEach { artistId ->
-                YouTube.artist(artistId).onSuccess { artistPage ->
+            // Fetch artist pages in parallel for better performance
+            coroutineScope {
+                val deferredArtistPages = randomArtistIds.take(15).map { artistId ->
+                    async {
+                        YouTube.artist(artistId).fold(
+                            onSuccess = { artistPage -> artistPage },
+                            onFailure = { error ->
+                                Timber.w(error, "HomeViewModel: Failed to fetch artist $artistId")
+                                null
+                            }
+                        )
+                    }
+                }
+
+                // Wait for all parallel requests to complete
+                val artistPages = deferredArtistPages.awaitAll().filterNotNull()
+
+                // Extract content from fetched artist pages
+                artistPages.forEach { artistPage ->
                     // Add the artist themselves
                     artists.add(artistPage.artist)
 
@@ -172,8 +191,6 @@ class HomeViewModel @Inject constructor(
 
                     albums.addAll(artistAlbums)
                     Timber.d("HomeViewModel: Artist ${artistPage.artist.title} - added ${artistAlbums.size} albums")
-                }.onFailure {
-                    Timber.w(it, "HomeViewModel: Failed to fetch artist $artistId")
                 }
             }
 
