@@ -85,13 +85,7 @@ fun ContentSettings(
     val (proxyUrl, onProxyUrlChange) = rememberPreference(key = ProxyUrlKey, defaultValue = "host:port")
     val (proxyUsername, onProxyUsernameChange) = rememberPreference(key = ProxyUsernameKey, defaultValue = "username")
     val (proxyPassword, onProxyPasswordChange) = rememberPreference(key = ProxyPasswordKey, defaultValue = "password")
-    val (enableKugou, onEnableKugouChange) = rememberPreference(key = EnableKugouKey, defaultValue = true)
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
-    val (preferredProvider, onPreferredProviderChange) =
-        rememberEnumPreference(
-            key = PreferredLyricsProviderKey,
-            defaultValue = PreferredLyricsProvider.LRCLIB,
-        )
     val (lengthTop, onLengthTopChange) = rememberPreference(key = TopSize, defaultValue = "50")
     val (quickPicks, onQuickPicksChange) = rememberEnumPreference(key = QuickPicksKey, defaultValue = QuickPicks.QUICK_PICKS)
 
@@ -333,31 +327,6 @@ fun ContentSettings(
             icon = { Icon(painterResource(R.drawable.lyrics), null) },
             checked = enableLrclib,
             onCheckedChange = onEnableLrclibChange,
-        )
-        SwitchPreference(
-            title = { Text(stringResource(R.string.enable_kugou)) },
-            icon = { Icon(painterResource(R.drawable.lyrics), null) },
-            checked = enableKugou,
-            onCheckedChange = onEnableKugouChange,
-        )
-        ListPreference(
-            title = { Text(stringResource(R.string.set_first_lyrics_provider)) },
-            icon = { Icon(painterResource(R.drawable.lyrics), null) },
-            selectedValue = preferredProvider,
-            values = listOf(PreferredLyricsProvider.LRCLIB, PreferredLyricsProvider.KUGOU),
-            valueText = {
-                when (it) {
-                    PreferredLyricsProvider.LRCLIB -> "LrcLib"
-                    PreferredLyricsProvider.KUGOU -> "KuGou"
-                }
-            },
-            onValueSelected = onPreferredProviderChange,
-        )
-
-        PreferenceEntry(
-            title = { Text(stringResource(R.string.lyrics_romanization)) },
-            icon = { Icon(painterResource(R.drawable.language_korean_latin), null) },
-            onClick = { navController.navigate("settings/content/romanization") }
         )
 
         PreferenceGroupTitle(title = stringResource(R.string.misc))
