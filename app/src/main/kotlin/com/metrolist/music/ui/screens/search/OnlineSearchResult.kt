@@ -198,15 +198,17 @@ fun OnlineSearchResult(
     ) {
         if (searchFilter == null) {
             searchSummary?.summaries?.forEach { summary ->
-                item {
-                    NavigationTitle(summary.title)
-                }
+                if (summary.items.isNotEmpty()) {
+                    item {
+                        NavigationTitle(summary.title)
+                    }
 
-                items(
-                    items = summary.items,
-                    key = { "${summary.title}/${it.id}/${summary.items.indexOf(it)}" },
-                    itemContent = ytItemContent,
-                )
+                    items(
+                        items = summary.items,
+                        key = { "${summary.title}/${it.id}/${summary.items.indexOf(it)}" },
+                        itemContent = ytItemContent,
+                    )
+                }
             }
 
             if (searchSummary?.summaries?.isEmpty() == true) {

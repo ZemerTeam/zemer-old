@@ -133,32 +133,71 @@ object YouTube {
 
     suspend fun searchSummary(query: String): Result<SearchSummaryPage> = runCatching {
         val response = innerTube.search(WEB_REMIX, query).body<SearchResponse>()
+
+        val contents = response.contents?.tabbedSearchResultsRenderer?.tabs?.firstOrNull()?.tabRenderer?.content?.sectionListRenderer?.contents
+
+        // Extract top result section (musicCardShelfRenderer)
+        val topResultSection = contents?.firstOrNull { it.musicCardShelfRenderer != null }?.musicCardShelfRenderer?.let { cardShelf ->
+            val items = listOfNotNull(SearchSummaryPage.fromMusicCardShelfRenderer(cardShelf))
+                .plus(
+                    cardShelf.contents
+                        ?.mapNotNull { it.musicResponsiveListItemRenderer }
+                        ?.mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
+                        .orEmpty()
+                )
+                .distinctBy { it.id }
+
+            if (items.isNotEmpty()) {
+                SearchSummary(
+                    title = cardShelf.header?.musicCardShelfHeaderBasicRenderer?.title?.runs?.firstOrNull()?.text ?: "Top result",
+                    items = items
+                )
+            } else null
+        }
+
+        // Collect all items from other sections (musicShelfRenderer)
+        val allOtherItems = contents?.filter { it.musicShelfRenderer != null }
+            ?.flatMap { section ->
+                section.musicShelfRenderer?.contents?.getItems()
+                    ?.mapNotNull { SearchSummaryPage.fromMusicResponsiveListItemRenderer(it) }
+                    .orEmpty()
+            }
+            ?.distinctBy { it.id }
+            .orEmpty()
+
+        // Group items by type and create categorized sections
+        val categorizedSummaries = buildList {
+            // Albums section
+            val albums = allOtherItems.filterIsInstance<AlbumItem>()
+            if (albums.isNotEmpty()) {
+                add(SearchSummary("Albums", albums))
+            }
+
+            // Songs section
+            val songs = allOtherItems.filterIsInstance<SongItem>()
+            if (songs.isNotEmpty()) {
+                add(SearchSummary("Songs", songs))
+            }
+
+            // Artists section
+            val artists = allOtherItems.filterIsInstance<ArtistItem>()
+            if (artists.isNotEmpty()) {
+                add(SearchSummary("Artists", artists))
+            }
+
+            // Playlists section
+            val playlists = allOtherItems.filterIsInstance<PlaylistItem>()
+            if (playlists.isNotEmpty()) {
+                add(SearchSummary("Playlists", playlists))
+            }
+        }
+
+        // Combine top result with categorized sections
         SearchSummaryPage(
-            summaries = response.contents?.tabbedSearchResultsRenderer?.tabs?.firstOrNull()?.tabRenderer?.content?.sectionListRenderer?.contents?.mapNotNull { it ->
-                if (it.musicCardShelfRenderer != null)
-                    SearchSummary(
-                        title = it.musicCardShelfRenderer.header?.musicCardShelfHeaderBasicRenderer?.title?.runs?.firstOrNull()?.text ?: "Top result",
-                        items = listOfNotNull(SearchSummaryPage.fromMusicCardShelfRenderer(it.musicCardShelfRenderer))
-                            .plus(
-                                it.musicCardShelfRenderer.contents
-                                    ?.mapNotNull { it.musicResponsiveListItemRenderer }
-                                    ?.mapNotNull(SearchSummaryPage.Companion::fromMusicResponsiveListItemRenderer)
-                                    .orEmpty()
-                            )
-                            .distinctBy { it.id }
-                            .ifEmpty { null } ?: return@mapNotNull null
-                    )
-                else
-                    SearchSummary(
-                        title = it.musicShelfRenderer?.title?.runs?.firstOrNull()?.text ?: "Other",
-                        items = it.musicShelfRenderer?.contents?.getItems()
-                            ?.mapNotNull {
-                                SearchSummaryPage.fromMusicResponsiveListItemRenderer(it)
-                            }
-                            ?.distinctBy { it.id }
-                            ?.ifEmpty { null } ?: return@mapNotNull null
-                    )
-            }!!
+            summaries = buildList {
+                topResultSection?.let { add(it) }
+                addAll(categorizedSummaries)
+            }
         )
     }
 
