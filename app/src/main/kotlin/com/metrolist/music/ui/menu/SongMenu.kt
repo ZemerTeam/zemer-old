@@ -114,6 +114,8 @@ fun SongMenu(
     val song = songState.value ?: originalSong
     val download by LocalDownloadUtil.current.getDownload(originalSong.id)
         .collectAsState(initial = null)
+    val mediaStoreDownload by LocalDownloadUtil.current.getMediaStoreDownload(originalSong.id)
+        .collectAsState(initial = null)
     val coroutineScope = rememberCoroutineScope()
     val syncUtils = LocalSyncUtils.current
     val scope = rememberCoroutineScope()
@@ -599,6 +601,90 @@ fun SongMenu(
                                 downloadRequest,
                                 false,
                             )
+                        }
+                    )
+                }
+            }
+        }
+        item {
+            when (mediaStoreDownload?.status) {
+                com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.COMPLETED -> {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = stringResource(R.string.downloaded_to_device),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.download),
+                                contentDescription = null,
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            // TODO: Option to remove from MediaStore
+                            onDismiss()
+                        }
+                    )
+                }
+                com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.DOWNLOADING,
+                com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.QUEUED -> {
+                    ListItem(
+                        headlineContent = {
+                            Text(text = stringResource(R.string.downloading_to_device))
+                        },
+                        supportingContent = {
+                            Text(text = "${(mediaStoreDownload.progress * 100).toInt()}%")
+                        },
+                        leadingContent = {
+                            CircularProgressIndicator(
+                                progress = { mediaStoreDownload.progress },
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            LocalDownloadUtil.current.cancelMediaStoreDownload(song.id)
+                            onDismiss()
+                        }
+                    )
+                }
+                com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.FAILED -> {
+                    ListItem(
+                        headlineContent = {
+                            Text(
+                                text = stringResource(R.string.download_failed),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        supportingContent = {
+                            Text(text = mediaStoreDownload.error ?: "Unknown error")
+                        },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.info),
+                                contentDescription = null,
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            LocalDownloadUtil.current.retryMediaStoreDownload(song.id)
+                            onDismiss()
+                        }
+                    )
+                }
+                else -> {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.download_to_device)) },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.download),
+                                contentDescription = null,
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            LocalDownloadUtil.current.downloadToMediaStore(song)
+                            onDismiss()
                         }
                     )
                 }
