@@ -111,7 +111,6 @@
     <string name="show_uploaded_playlist">Show \"Uploaded\" playlist</string>
 
     <string name="google">Google</string>
-    <string name="discord">Discord</string>
     <string name="advanced_login">Login with token</string>
     <string name="token_hidden">Tap to show token</string>
     <string name="token_shown">Tap again to copy or edit</string>
@@ -144,8 +143,6 @@
     <string name="proxy_username">Proxy username</string>
     <string name="proxy_password">Proxy password</string>
     <string name="enable_authentication">Enable authentication</string>
-    <string name="discord_use_details">Use details instead of state</string>
-    <string name="discord_use_details_description">Show song title prominently instead of artist names</string>
 
     <string name="audio_quality_max">Max (beta)</string>
     <string name="min_playback_duration_title">Minimum playback duration</string>
@@ -248,15 +245,6 @@
     <string name="audio_offload_description">Use the offload audio path for audio playback. Disabling this may increase power usage but can be useful if you experience issues with audio playback or post processing</string>
     <string name="lyrics_romanize_macedonian">Romanize Macedonian lyrics</string>
 
-    <string name="integrations">Integrations</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
-    <!-- Last.fm -->
-    <string name="lastfm_integration">Last.fm Integration</string>
-    <string name="enable_scrobbling">Enable scrobbling</string>
-    <string name="lastfm_now_playing">Send Now Playing</string>
-    <string name="scrobbling_configuration">Scrobbling Configuration</string>
-    <string name="scrobble_min_track_duration">Scrobble songs longer than</string>
-    <string name="scrobble_delay_percent">Scrobble delay percent</string>
-    <string name="scrobble_delay_minutes">Scrobble delay minutes</string>
 </resources>
