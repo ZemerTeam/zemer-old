@@ -13,6 +13,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
@@ -174,7 +175,7 @@ constructor(
      */
     fun retryDownload(songId: String) {
         scope.launch {
-            val song = database.song(songId).kotlinx.coroutines.flow.first() ?: run {
+            val song = database.song(songId).first() ?: run {
                 Timber.e("Song not found in database: $songId")
                 return@launch
             }
@@ -383,7 +384,7 @@ constructor(
      */
     private suspend fun markSongAsDownloaded(songId: String) {
         database.query {
-            database.song(songId).kotlinx.coroutines.flow.first()?.let { song ->
+            database.song(songId).first()?.let { song ->
                 database.upsert(
                     song.song.copy(
                         isDownloaded = true,
@@ -405,7 +406,7 @@ constructor(
      * Check if a song is downloaded
      */
     suspend fun isDownloaded(songId: String): Boolean {
-        return database.song(songId).kotlinx.coroutines.flow.first()?.song?.isDownloaded == true
+        return database.song(songId).first()?.song?.isDownloaded == true
     }
 
     /**
