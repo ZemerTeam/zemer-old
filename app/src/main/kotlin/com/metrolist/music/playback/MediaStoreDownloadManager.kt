@@ -94,6 +94,8 @@ constructor(
      */
     fun downloadSong(song: Song) {
         scope.launch {
+            // Start notification service
+            MediaStoreDownloadService.start(context)
             // Check if already downloading or completed
             val currentState = _downloadStates.value[song.id]
             if (currentState?.status == DownloadState.Status.DOWNLOADING ||
