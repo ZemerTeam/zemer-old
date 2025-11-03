@@ -21,10 +21,53 @@ import timber.log.Timber
 object PermissionHelper {
 
     /**
-     * Check if storage permissions are granted for MediaStore operations
+     * Check if storage permissions are granted for MediaStore WRITE operations.
+     *
+     * On Android 10+, while WRITE_EXTERNAL_STORAGE is not technically required for MediaStore writes,
+     * we still need READ permissions to verify and access the downloaded files.
      *
      * @param context Application context
-     * @return true if all required permissions are granted
+     * @return true if all required permissions are granted for writing
+     */
+    fun hasMediaStoreWritePermission(context: Context): Boolean {
+        return when {
+            // Android 13+ (API 33+) - Check READ_MEDIA_AUDIO
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_MEDIA_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+                Timber.d("Android 13+: READ_MEDIA_AUDIO ${if (hasPermission) "granted" else "denied"}")
+                hasPermission
+            }
+
+            // Android 10-12 (API 29-32) - Check READ_EXTERNAL_STORAGE
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+                Timber.d("Android 10-12: READ_EXTERNAL_STORAGE ${if (hasPermission) "granted" else "denied"}")
+                hasPermission
+            }
+
+            // Android 9 and below (API ≤28) - Requires WRITE_EXTERNAL_STORAGE
+            else -> {
+                val hasPermission = ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+                Timber.d("Android 9 or below: WRITE_EXTERNAL_STORAGE ${if (hasPermission) "granted" else "denied"}")
+                hasPermission
+            }
+        }
+    }
+
+    /**
+     * Check if storage permissions are granted for MediaStore READ operations
+     *
+     * @param context Application context
+     * @return true if all required permissions are granted for reading
      */
     fun hasStoragePermission(context: Context): Boolean {
         return when {
@@ -59,9 +102,33 @@ object PermissionHelper {
     }
 
     /**
-     * Get the required storage permissions for current Android version
+     * Get the required storage permissions for MediaStore WRITE operations
      *
-     * @return Array of permission strings needed
+     * @return Array of permission strings needed for writing
+     */
+    fun getRequiredWritePermissions(): Array<String> {
+        return when {
+            // Android 13+ (API 33+) - Request READ_MEDIA_AUDIO
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+                arrayOf(Manifest.permission.READ_MEDIA_AUDIO)
+            }
+
+            // Android 10-12 (API 29-32) - Request READ_EXTERNAL_STORAGE
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> {
+                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+            }
+
+            // Android 9 and below (API ≤28) - Request WRITE_EXTERNAL_STORAGE
+            else -> {
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    /**
+     * Get the required storage permissions for MediaStore READ operations
+     *
+     * @return Array of permission strings needed for reading
      */
     fun getRequiredPermissions(): Array<String> {
         return when {

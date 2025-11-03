@@ -275,7 +275,8 @@ constructor(
                 val artist = song.artists.firstOrNull()?.name ?: "Unknown Artist"
                 val album = song.album?.title
                 val duration = song.song.duration?.times(1000L) // Convert to milliseconds
-                val extension = format.mimeType.substringAfter("/").substringBefore(";")
+                // Force MP3 extension for MediaStore compatibility (Android doesn't support audio/webm)
+                val extension = "mp3"
                 val mimeType = mediaStoreHelper.getMimeType(extension)
 
                 // Save to MediaStore

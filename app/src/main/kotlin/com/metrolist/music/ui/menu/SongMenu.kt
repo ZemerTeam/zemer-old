@@ -135,6 +135,13 @@ fun SongMenu(
             // All permissions granted, proceed with download
             downloadUtil.downloadToMediaStore(song)
             onDismiss()
+        } else {
+            // Permissions denied - show error message
+            android.widget.Toast.makeText(
+                context,
+                context.getString(R.string.storage_permission_required),
+                android.widget.Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -628,11 +635,11 @@ fun SongMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            if (PermissionHelper.hasStoragePermission(context)) {
+                            if (PermissionHelper.hasMediaStoreWritePermission(context)) {
                                 downloadUtil.downloadToMediaStore(song)
                                 onDismiss()
                             } else {
-                                val permissions = PermissionHelper.getRequiredPermissions()
+                                val permissions = PermissionHelper.getRequiredWritePermissions()
                                 permissionLauncher.launch(permissions)
                             }
                         }
