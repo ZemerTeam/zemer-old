@@ -132,6 +132,32 @@ fun AlbumMenu(
         }
     }
 
+    var mediaStoreDownloadState by remember {
+        mutableStateOf<AlbumMediaStoreDownloadStatus>(AlbumMediaStoreDownloadStatus.NotDownloaded)
+    }
+
+    LaunchedEffect(songs) {
+        if (songs.isEmpty()) return@LaunchedEffect
+        downloadUtil.getAllMediaStoreDownloads().collect { states ->
+            val songStates = songs.mapNotNull { states[it.id] }
+            mediaStoreDownloadState = when {
+                songStates.isEmpty() -> AlbumMediaStoreDownloadStatus.NotDownloaded
+                songStates.all { it.status == com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.COMPLETED } ->
+                    AlbumMediaStoreDownloadStatus.Completed
+                songStates.any {
+                    it.status == com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.DOWNLOADING ||
+                    it.status == com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.QUEUED
+                } -> {
+                    val totalProgress = songStates.sumOf { it.progress.toDouble() } / songs.size
+                    AlbumMediaStoreDownloadStatus.Downloading(totalProgress.toFloat())
+                }
+                songStates.any { it.status == com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.FAILED } ->
+                    AlbumMediaStoreDownloadStatus.Failed
+                else -> AlbumMediaStoreDownloadStatus.NotDownloaded
+            }
+        }
+    }
+
     var refetchIconDegree by remember { mutableFloatStateOf(0f) }
 
     val rotationAnimation by animateFloatAsState(
@@ -409,57 +435,79 @@ fun AlbumMenu(
             )
         }
         item {
-            when (downloadState) {
-                STATE_COMPLETED -> {
+            when (mediaStoreDownloadState) {
+                is AlbumMediaStoreDownloadStatus.Completed -> {
                     ListItem(
                         headlineContent = {
                             Text(
-                                text = stringResource(R.string.remove_download),
-                                color = MaterialTheme.colorScheme.error
+                                text = stringResource(R.string.downloaded_to_device),
+                                color = MaterialTheme.colorScheme.primary
                             )
                         },
                         leadingContent = {
                             Icon(
-                                painter = painterResource(R.drawable.offline),
+                                painter = painterResource(R.drawable.download),
                                 contentDescription = null,
                             )
                         },
                         modifier = Modifier.clickable {
-                            songs.forEach { song ->
-                                DownloadService.sendRemoveDownload(
-                                    context,
-                                    ExoDownloadService::class.java,
-                                    song.id,
-                                    false,
-                                )
-                            }
+                            // TODO: Option to remove from MediaStore
+                            onDismiss()
                         }
                     )
                 }
-                STATE_QUEUED, STATE_DOWNLOADING -> {
+                is AlbumMediaStoreDownloadStatus.Downloading -> {
+                    val progress = (mediaStoreDownloadState as AlbumMediaStoreDownloadStatus.Downloading).progress
                     ListItem(
-                        headlineContent = { Text(text = stringResource(R.string.downloading)) },
+                        headlineContent = {
+                            Text(text = stringResource(R.string.downloading_to_device))
+                        },
+                        supportingContent = {
+                            Text(text = "${(progress * 100).toInt()}%")
+                        },
                         leadingContent = {
                             CircularProgressIndicator(
+                                progress = { progress },
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp
                             )
                         },
                         modifier = Modifier.clickable {
                             songs.forEach { song ->
-                                DownloadService.sendRemoveDownload(
-                                    context,
-                                    ExoDownloadService::class.java,
-                                    song.id,
-                                    false,
-                                )
+                                downloadUtil.cancelMediaStoreDownload(song.id)
                             }
+                            onDismiss()
                         }
                     )
                 }
-                else -> {
+                is AlbumMediaStoreDownloadStatus.Failed -> {
                     ListItem(
-                        headlineContent = { Text(text = stringResource(R.string.action_download)) },
+                        headlineContent = {
+                            Text(
+                                text = stringResource(R.string.download_failed),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        },
+                        supportingContent = {
+                            Text(text = stringResource(R.string.retry_download))
+                        },
+                        leadingContent = {
+                            Icon(
+                                painter = painterResource(R.drawable.info),
+                                contentDescription = null,
+                            )
+                        },
+                        modifier = Modifier.clickable {
+                            songs.forEach { song ->
+                                downloadUtil.retryMediaStoreDownload(song.id)
+                            }
+                            onDismiss()
+                        }
+                    )
+                }
+                AlbumMediaStoreDownloadStatus.NotDownloaded -> {
+                    ListItem(
+                        headlineContent = { Text(text = stringResource(R.string.download_to_device)) },
                         leadingContent = {
                             Icon(
                                 painter = painterResource(R.drawable.download),
@@ -468,19 +516,9 @@ fun AlbumMenu(
                         },
                         modifier = Modifier.clickable {
                             songs.forEach { song ->
-                                val downloadRequest =
-                                    DownloadRequest
-                                        .Builder(song.id, song.id.toUri())
-                                        .setCustomCacheKey(song.id)
-                                        .setData(song.song.title.toByteArray())
-                                        .build()
-                                DownloadService.sendAddDownload(
-                                    context,
-                                    ExoDownloadService::class.java,
-                                    downloadRequest,
-                                    false,
-                                )
+                                downloadUtil.downloadToMediaStore(song)
                             }
+                            onDismiss()
                         }
                     )
                 }
@@ -529,4 +567,11 @@ fun AlbumMenu(
         }
 
     }
+}
+
+private sealed class AlbumMediaStoreDownloadStatus {
+    object NotDownloaded : AlbumMediaStoreDownloadStatus()
+    object Completed : AlbumMediaStoreDownloadStatus()
+    data class Downloading(val progress: Float) : AlbumMediaStoreDownloadStatus()
+    object Failed : AlbumMediaStoreDownloadStatus()
 }

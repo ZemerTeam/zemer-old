@@ -139,6 +139,7 @@ import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
+import timber.log.Timber
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.time.LocalDateTime
@@ -1162,6 +1163,17 @@ class MusicService :
         val songUrlCache = HashMap<String, Pair<String, Long>>()
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
             val mediaId = dataSpec.key ?: error("No media id")
+
+            // Check for MediaStore URI first (local playback)
+            val song = runBlocking(Dispatchers.IO) {
+                database.song(mediaId).first()
+            }
+
+            if (song?.song?.mediaStoreUri != null) {
+                Timber.d("Playing from MediaStore: ${song.song.mediaStoreUri}")
+                scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
+                return@Factory dataSpec.withUri(song.song.mediaStoreUri.toUri())
+            }
 
             if (downloadCache.isCached(
                     mediaId,

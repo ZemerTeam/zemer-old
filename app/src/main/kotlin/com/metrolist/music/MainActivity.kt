@@ -248,6 +248,30 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    /**
+     * Request storage permissions at startup if not already granted.
+     * Required for MediaStore downloads to Music/Zemer folder.
+     */
+    private fun requestStoragePermissionsIfNeeded() {
+        // Check if permissions are already granted
+        if (com.metrolist.music.utils.PermissionHelper.hasMediaStoreWritePermission(this)) {
+            timber.log.Timber.d("Storage permissions already granted")
+            return
+        }
+
+        // Get required permissions for current Android version
+        val permissions = com.metrolist.music.utils.PermissionHelper.getRequiredWritePermissions()
+        if (permissions.isEmpty()) {
+            // Android 10+ with no permissions needed (shouldn't happen with our fixed code)
+            timber.log.Timber.d("No storage permissions required")
+            return
+        }
+
+        // Request permissions
+        timber.log.Timber.d("Requesting storage permissions at startup: ${permissions.joinToString()}")
+        ActivityCompat.requestPermissions(this, permissions, 2000)
+    }
+
     override fun onStart() {
         super.onStart()
         // Request notification permission on Android 13+
@@ -305,6 +329,9 @@ class MainActivity : ComponentActivity() {
                 ?: Locale.getDefault()
             setAppLocale(this, locale)
         }
+
+        // Request storage permissions at startup for MediaStore downloads
+        requestStoragePermissionsIfNeeded()
 
         lifecycleScope.launch {
             dataStore.data

@@ -175,36 +175,52 @@ constructor(
                             ),
                         )
 
-                    MusicService.SONG -> database.songsByCreateDateAsc().first()
-                        .map { it.toMediaItem(parentId) }
+                    MusicService.SONG -> {
+                        val whitelistedArtistIds = database.getAllWhitelistedArtistIdsSync()
+                        database.songsByCreateDateAsc().first()
+                            .filter { song ->
+                                song.artists.any { artist -> whitelistedArtistIds.contains(artist.id) }
+                            }
+                            .map { it.toMediaItem(parentId) }
+                    }
 
-                    MusicService.ARTIST ->
-                        database.artistsByCreateDateAsc().first().map { artist ->
-                            browsableMediaItem(
-                                "${MusicService.ARTIST}/${artist.id}",
-                                artist.artist.name,
-                                context.resources.getQuantityString(
-                                    R.plurals.n_song,
-                                    artist.songCount,
-                                    artist.songCount
-                                ),
-                                artist.artist.thumbnailUrl?.toUri(),
-                                MediaMetadata.MEDIA_TYPE_ARTIST,
-                            )
-                        }
+                    MusicService.ARTIST -> {
+                        val whitelistedArtistIds = database.getAllWhitelistedArtistIdsSync()
+                        database.artistsByCreateDateAsc().first()
+                            .filter { artist -> whitelistedArtistIds.contains(artist.id) }
+                            .map { artist ->
+                                browsableMediaItem(
+                                    "${MusicService.ARTIST}/${artist.id}",
+                                    artist.artist.name,
+                                    context.resources.getQuantityString(
+                                        R.plurals.n_song,
+                                        artist.songCount,
+                                        artist.songCount
+                                    ),
+                                    artist.artist.thumbnailUrl?.toUri(),
+                                    MediaMetadata.MEDIA_TYPE_ARTIST,
+                                )
+                            }
+                    }
 
-                    MusicService.ALBUM ->
-                        database.albumsByCreateDateAsc().first().map { album ->
-                            browsableMediaItem(
-                                "${MusicService.ALBUM}/${album.id}",
-                                album.album.title,
-                                album.artists.joinToString {
-                                    it.name
-                                },
-                                album.album.thumbnailUrl?.toUri(),
-                                MediaMetadata.MEDIA_TYPE_ALBUM,
-                            )
-                        }
+                    MusicService.ALBUM -> {
+                        val whitelistedArtistIds = database.getAllWhitelistedArtistIdsSync()
+                        database.albumsByCreateDateAsc().first()
+                            .filter { album ->
+                                album.artists.any { artist -> whitelistedArtistIds.contains(artist.id) }
+                            }
+                            .map { album ->
+                                browsableMediaItem(
+                                    "${MusicService.ALBUM}/${album.id}",
+                                    album.album.title,
+                                    album.artists.joinToString {
+                                        it.name
+                                    },
+                                    album.album.thumbnailUrl?.toUri(),
+                                    MediaMetadata.MEDIA_TYPE_ALBUM,
+                                )
+                            }
+                    }
 
                     MusicService.PLAYLIST -> {
                         val likedSongCount = database.likedSongsCount().first()

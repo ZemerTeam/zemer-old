@@ -46,6 +46,8 @@ data class SongEntity(
     val romanizeLyrics: Boolean = true,
     @ColumnInfo(defaultValue = "0")
     val isDownloaded: Boolean = false,
+    @ColumnInfo(name = "mediaStoreUri", defaultValue = "NULL")
+    val mediaStoreUri: String? = null,
     @ColumnInfo(name = "isUploaded", defaultValue = false.toString())
     val isUploaded: Boolean = false
 ) {
