@@ -38,6 +38,7 @@ import com.metrolist.music.extensions.metadata
 import com.metrolist.music.models.toMediaMetadata
 import com.metrolist.music.playback.queues.ListQueue
 import com.metrolist.music.utils.dataStore
+import com.metrolist.music.utils.filterWhitelisted
 import com.metrolist.music.utils.get
 import com.metrolist.music.utils.reportException
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -368,22 +369,26 @@ constructor(
                 }
 
                 try {
-                    val onlineResults = YouTube.search(query, YouTube.SearchFilter.FILTER_SONG)
+                    val searchItems = YouTube.search(query, YouTube.SearchFilter.FILTER_SONG)
                         .getOrNull()
                         ?.items
                         ?.filterIsInstance<SongItem>()
                         ?.filterExplicit(context.dataStore.get(HideExplicitKey, false))
-                        ?.filter { onlineSong ->
-                            !allLocalSongs.any { localSong ->
-                                localSong.id == onlineSong.id ||
-                                (localSong.song.title.equals(onlineSong.title, ignoreCase = true) &&
-                                 localSong.artists.any { artist ->
-                                     onlineSong.artists?.any { 
-                                         it.name.equals(artist.name, ignoreCase = true) 
-                                     } == true
-                                 })
-                            }
-                        } ?: emptyList()
+                        ?: emptyList()
+
+                    val whitelistedItems = searchItems.filterWhitelisted(database).filterIsInstance<SongItem>()
+
+                    val onlineResults = whitelistedItems.filter { onlineSong ->
+                        !allLocalSongs.any { localSong ->
+                            localSong.id == onlineSong.id ||
+                            (localSong.song.title.equals(onlineSong.title, ignoreCase = true) &&
+                             localSong.artists.any { artist ->
+                                 onlineSong.artists?.any {
+                                     it.name.equals(artist.name, ignoreCase = true)
+                                 } == true
+                             })
+                        }
+                    }
 
                     onlineResults.forEach { songItem ->
                         try {
@@ -528,22 +533,26 @@ constructor(
                     searchResults.addAll(allLocalSongs)
                     
                     try {
-                        val onlineResults = YouTube.search(searchQuery, YouTube.SearchFilter.FILTER_SONG)
+                        val searchItems = YouTube.search(searchQuery, YouTube.SearchFilter.FILTER_SONG)
                             .getOrNull()
                             ?.items
                             ?.filterIsInstance<SongItem>()
                             ?.filterExplicit(context.dataStore.get(HideExplicitKey, false))
-                            ?.filter { onlineSong ->
-                                !allLocalSongs.any { localSong ->
-                                    localSong.id == onlineSong.id ||
-                                    (localSong.song.title.equals(onlineSong.title, ignoreCase = true) &&
-                                     localSong.artists.any { artist ->
-                                         onlineSong.artists?.any { 
-                                             it.name.equals(artist.name, ignoreCase = true) 
-                                         } == true
-                                     })
-                                }
-                            } ?: emptyList()
+                            ?: emptyList()
+
+                        val whitelistedItems = searchItems.filterWhitelisted(database).filterIsInstance<SongItem>()
+
+                        val onlineResults = whitelistedItems.filter { onlineSong ->
+                            !allLocalSongs.any { localSong ->
+                                localSong.id == onlineSong.id ||
+                                (localSong.song.title.equals(onlineSong.title, ignoreCase = true) &&
+                                 localSong.artists.any { artist ->
+                                     onlineSong.artists?.any {
+                                         it.name.equals(artist.name, ignoreCase = true)
+                                     } == true
+                                 })
+                            }
+                        }
 
                         onlineResults.forEach { songItem ->
                             try {

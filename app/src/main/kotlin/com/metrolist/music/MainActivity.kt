@@ -189,6 +189,7 @@ import com.metrolist.music.ui.utils.resetHeightOffset
 import com.metrolist.music.utils.SyncUtils
 import com.metrolist.music.utils.Updater
 import com.metrolist.music.utils.dataStore
+import com.metrolist.music.utils.filterWhitelisted
 import com.metrolist.music.utils.get
 import com.metrolist.music.utils.rememberEnumPreference
 import com.metrolist.music.utils.rememberPreference
@@ -1308,11 +1309,19 @@ class MainActivity : ComponentActivity() {
                 videoId?.let {
                     coroutineScope.launch(Dispatchers.IO) {
                         YouTube.queue(listOf(it), playlistId).onSuccess { queue ->
+                            // Filter by whitelist
+                            val filteredQueue = queue.filterWhitelisted(database).filterIsInstance<SongItem>()
+
+                            // Silently ignore if no whitelisted songs
+                            if (filteredQueue.isEmpty()) {
+                                return@onSuccess
+                            }
+
                             withContext(Dispatchers.Main) {
                                 playerConnection?.playQueue(
                                     YouTubeQueue(
-                                        WatchEndpoint(videoId = queue.firstOrNull()?.id, playlistId = playlistId),
-                                        queue.firstOrNull()?.toMediaMetadata(),
+                                        WatchEndpoint(videoId = filteredQueue.firstOrNull()?.id, playlistId = playlistId),
+                                        filteredQueue.firstOrNull()?.toMediaMetadata(),
                                         database
                                     )
                                 )
