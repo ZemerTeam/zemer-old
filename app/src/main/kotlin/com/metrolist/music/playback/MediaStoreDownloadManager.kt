@@ -120,7 +120,7 @@ constructor(
                         progress = 1f
                     )
                 )
-                markSongAsDownloaded(song.id)
+                markSongAsDownloaded(song.id, existingFile.toString())
                 return@launch
             }
 
@@ -287,8 +287,8 @@ constructor(
                         )
                     )
 
-                    // Update database
-                    markSongAsDownloaded(song.id)
+                    // Update database with MediaStore URI
+                    markSongAsDownloaded(song.id, uri.toString())
 
                     Timber.d("Download completed: ${song.song.title} -> $uri")
                 } else {
@@ -382,15 +382,16 @@ constructor(
     }
 
     /**
-     * Mark a song as downloaded in the database
+     * Mark a song as downloaded in the database with MediaStore URI
      */
-    private suspend fun markSongAsDownloaded(songId: String) {
+    private suspend fun markSongAsDownloaded(songId: String, mediaStoreUri: String) {
         database.query {
             database.song(songId).first()?.let { song ->
                 database.upsert(
                     song.song.copy(
                         isDownloaded = true,
-                        dateDownload = LocalDateTime.now()
+                        dateDownload = LocalDateTime.now(),
+                        mediaStoreUri = mediaStoreUri
                     )
                 )
             }
