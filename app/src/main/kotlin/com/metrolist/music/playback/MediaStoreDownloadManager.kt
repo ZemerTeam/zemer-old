@@ -2,6 +2,7 @@ package com.metrolist.music.playback
 
 import android.content.Context
 import com.metrolist.innertube.YouTube
+import com.metrolist.innertube.models.YouTubeClient.Companion.WEB_REMIX
 import com.metrolist.music.db.MusicDatabase
 import com.metrolist.music.db.entities.Song
 import com.metrolist.music.utils.MediaStoreHelper
@@ -226,7 +227,7 @@ constructor(
     /**
      * Perform the actual download with retry logic
      */
-    private suspend fun performDownload(song: Song, retryAttempt: Int = 0) = withContext(Dispatchers.IO) {
+    private suspend fun performDownload(song: Song, retryAttempt: Int = 0): Unit = withContext(Dispatchers.IO) {
         try {
             updateDownloadState(
                 song.id,
@@ -240,7 +241,7 @@ constructor(
             Timber.d("Starting download for: ${song.song.title} (attempt ${retryAttempt + 1})")
 
             // Get playback URL from YouTube
-            val player = YouTube.player(song.id).getOrNull() ?: throw Exception("Failed to get player info")
+            val player = YouTube.player(song.id, client = WEB_REMIX).getOrNull() ?: throw Exception("Failed to get player info")
 
             val format = player.streamingData?.adaptiveFormats
                 ?.filter { it.mimeType.startsWith("audio/") }
@@ -306,7 +307,7 @@ constructor(
 
             // Retry logic with exponential backoff
             if (retryAttempt < MAX_RETRY_ATTEMPTS) {
-                val delayMs = (INITIAL_RETRY_DELAY_MS * RETRY_BACKOFF_MULTIPLIER.pow(retryAttempt)).toLong()
+                val delayMs: Long = (INITIAL_RETRY_DELAY_MS * RETRY_BACKOFF_MULTIPLIER.pow(retryAttempt)).toLong()
                 Timber.d("Retrying download in ${delayMs}ms...")
 
                 updateDownloadState(
@@ -385,8 +386,9 @@ constructor(
      * Mark a song as downloaded in the database with MediaStore URI
      */
     private suspend fun markSongAsDownloaded(songId: String, mediaStoreUri: String) {
-        database.query {
-            database.song(songId).first()?.let { song ->
+        val song = database.song(songId).first()
+        if (song != null) {
+            database.query {
                 database.upsert(
                     song.song.copy(
                         isDownloaded = true,

@@ -112,9 +112,10 @@ fun SongMenu(
     val playerConnection = LocalPlayerConnection.current ?: return
     val songState = database.song(originalSong.id).collectAsState(initial = originalSong)
     val song = songState.value ?: originalSong
-    val download by LocalDownloadUtil.current.getDownload(originalSong.id)
+    val downloadUtil = LocalDownloadUtil.current
+    val download by downloadUtil.getDownload(originalSong.id)
         .collectAsState(initial = null)
-    val mediaStoreDownload by LocalDownloadUtil.current.getMediaStoreDownload(originalSong.id)
+    val mediaStoreDownload by downloadUtil.getMediaStoreDownload(originalSong.id)
         .collectAsState(initial = null)
     val coroutineScope = rememberCoroutineScope()
     val syncUtils = LocalSyncUtils.current
@@ -630,27 +631,29 @@ fun SongMenu(
                 }
                 com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.DOWNLOADING,
                 com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.QUEUED -> {
+                    val downloadState = mediaStoreDownload!!
                     ListItem(
                         headlineContent = {
                             Text(text = stringResource(R.string.downloading_to_device))
                         },
                         supportingContent = {
-                            Text(text = "${(mediaStoreDownload.progress * 100).toInt()}%")
+                            Text(text = "${(downloadState.progress * 100).toInt()}%")
                         },
                         leadingContent = {
                             CircularProgressIndicator(
-                                progress = { mediaStoreDownload.progress },
+                                progress = { downloadState.progress },
                                 modifier = Modifier.size(24.dp),
                                 strokeWidth = 2.dp
                             )
                         },
                         modifier = Modifier.clickable {
-                            LocalDownloadUtil.current.cancelMediaStoreDownload(song.id)
+                            downloadUtil.cancelMediaStoreDownload(song.id)
                             onDismiss()
                         }
                     )
                 }
                 com.metrolist.music.playback.MediaStoreDownloadManager.DownloadState.Status.FAILED -> {
+                    val downloadState = mediaStoreDownload!!
                     ListItem(
                         headlineContent = {
                             Text(
@@ -659,7 +662,7 @@ fun SongMenu(
                             )
                         },
                         supportingContent = {
-                            Text(text = mediaStoreDownload.error ?: "Unknown error")
+                            Text(text = downloadState.error ?: "Unknown error")
                         },
                         leadingContent = {
                             Icon(
@@ -668,7 +671,7 @@ fun SongMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            LocalDownloadUtil.current.retryMediaStoreDownload(song.id)
+                            downloadUtil.retryMediaStoreDownload(song.id)
                             onDismiss()
                         }
                     )
@@ -683,7 +686,7 @@ fun SongMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            LocalDownloadUtil.current.downloadToMediaStore(song)
+                            downloadUtil.downloadToMediaStore(song)
                             onDismiss()
                         }
                     )

@@ -35,7 +35,7 @@ fun IntegrationScreen(
     }
 
     TopAppBar(
-        title = { Text(stringResource(R.string.integrations)) },
+        title = { Text("Integrations") },
         navigationIcon = {
             IconButton(
                 onClick = navController::navigateUp,
