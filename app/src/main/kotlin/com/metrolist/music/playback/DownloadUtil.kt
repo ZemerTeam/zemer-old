@@ -40,6 +40,7 @@ constructor(
     val databaseProvider: DatabaseProvider,
     @DownloadCache val downloadCache: SimpleCache,
     @PlayerCache val playerCache: SimpleCache,
+    val mediaStoreDownloadManager: MediaStoreDownloadManager,
 ) {
     private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
     private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
@@ -190,6 +191,29 @@ constructor(
     }
 
     fun getDownload(songId: String): Flow<Download?> = downloads.map { it[songId] }
+
+    // MediaStore download methods
+    fun getMediaStoreDownload(songId: String): Flow<MediaStoreDownloadManager.DownloadState?> =
+        mediaStoreDownloadManager.downloadStates.map { it[songId] }
+
+    fun getAllMediaStoreDownloads(): StateFlow<Map<String, MediaStoreDownloadManager.DownloadState>> =
+        mediaStoreDownloadManager.downloadStates
+
+    fun downloadToMediaStore(song: com.metrolist.music.db.entities.Song) {
+        mediaStoreDownloadManager.downloadSong(song)
+    }
+
+    fun cancelMediaStoreDownload(songId: String) {
+        mediaStoreDownloadManager.cancelDownload(songId)
+    }
+
+    fun retryMediaStoreDownload(songId: String) {
+        mediaStoreDownloadManager.retryDownload(songId)
+    }
+
+    suspend fun isDownloadedInMediaStore(songId: String): Boolean {
+        return mediaStoreDownloadManager.isDownloaded(songId)
+    }
 
     fun release() {
         scope.cancel()
