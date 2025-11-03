@@ -101,9 +101,9 @@
     <string name="remove_download">Remove download</string>
 
     <!-- MediaStore downloads -->
-    <string name="download_to_device">Download to device</string>
-    <string name="downloading_to_device">Downloading to device</string>
-    <string name="downloaded_to_device">Downloaded to device</string>
+    <string name="download_to_device">Download</string>
+    <string name="downloading_to_device">Downloading</string>
+    <string name="downloaded_to_device">Downloaded</string>
     <string name="download_failed">Download failed</string>
     <string name="retry_download">Retry download</string>
     <string name="cancel_download">Cancel download</string>

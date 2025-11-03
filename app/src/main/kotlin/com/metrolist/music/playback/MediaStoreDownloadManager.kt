@@ -1,11 +1,15 @@
 package com.metrolist.music.playback
 
 import android.content.Context
-import com.metrolist.innertube.YouTube
-import com.metrolist.innertube.models.YouTubeClient.Companion.WEB_REMIX
+import android.net.ConnectivityManager
+import androidx.core.content.getSystemService
+import com.metrolist.music.constants.AudioQuality
+import com.metrolist.music.constants.AudioQualityKey
 import com.metrolist.music.db.MusicDatabase
 import com.metrolist.music.db.entities.Song
 import com.metrolist.music.utils.MediaStoreHelper
+import com.metrolist.music.utils.YTPlayerUtils
+import com.metrolist.music.utils.enumPreference
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +51,8 @@ constructor(
 ) {
     private val scope = CoroutineScope(Dispatchers.IO + Job())
     private val mediaStoreHelper = MediaStoreHelper(context)
+    private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
+    private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
 
     // Concurrent download limiter (max 3 simultaneous downloads)
     private val downloadSemaphore = Semaphore(MAX_CONCURRENT_DOWNLOADS)
@@ -240,15 +246,15 @@ constructor(
 
             Timber.d("Starting download for: ${song.song.title} (attempt ${retryAttempt + 1})")
 
-            // Get playback URL from YouTube
-            val player = YouTube.player(song.id, client = WEB_REMIX).getOrNull() ?: throw Exception("Failed to get player info")
+            // Get playback URL from YouTube using YTPlayerUtils
+            val playbackData = YTPlayerUtils.playerResponseForPlayback(
+                videoId = song.id,
+                audioQuality = audioQuality,
+                connectivityManager = connectivityManager
+            ).getOrThrow()
 
-            val format = player.streamingData?.adaptiveFormats
-                ?.filter { it.mimeType.startsWith("audio/") }
-                ?.maxByOrNull { it.bitrate ?: 0 }
-                ?: throw Exception("No audio format available")
-
-            val downloadUrl = format.url ?: throw Exception("No download URL available")
+            val format = playbackData.format
+            val downloadUrl = playbackData.streamUrl
 
             // Create temporary file for download
             val tempFile = File(context.cacheDir, "temp_${song.id}.${format.mimeType.substringAfter("/")}")
