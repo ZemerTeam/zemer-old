@@ -263,6 +263,13 @@ constructor(
                 // Download to temp file
                 downloadFile(downloadUrl, tempFile, song.id)
 
+                // Verify temp file was created
+                Timber.d("Temp file created: ${tempFile.exists()}, size: ${tempFile.length()} bytes, path: ${tempFile.absolutePath}")
+
+                if (!tempFile.exists() || tempFile.length() == 0L) {
+                    throw Exception("Download failed - temp file not created or empty")
+                }
+
                 // Get audio metadata
                 val title = song.song.title
                 val artist = song.artists.firstOrNull()?.name ?: "Unknown Artist"
@@ -309,7 +316,8 @@ constructor(
             }
 
         } catch (e: Exception) {
-            Timber.e(e, "Download failed for ${song.song.title} (attempt ${retryAttempt + 1})")
+            Timber.e(e, "Download failed for ${song.song.title} (attempt ${retryAttempt + 1}): ${e.message}")
+            Timber.e("Error type: ${e.javaClass.simpleName}")
 
             // Retry logic with exponential backoff
             if (retryAttempt < MAX_RETRY_ATTEMPTS) {
@@ -347,10 +355,31 @@ constructor(
      * Download a file from a URL to a temp file with progress tracking
      */
     private suspend fun downloadFile(url: String, outputFile: File, songId: String) = withContext(Dispatchers.IO) {
-        val connection = java.net.URL(url).openConnection()
+        val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+
+        // Configure connection for YouTube
+        connection.apply {
+            setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            setRequestProperty("Accept", "*/*")
+            setRequestProperty("Accept-Language", "en-US,en;q=0.9")
+            setRequestProperty("Range", "bytes=0-")
+            connectTimeout = 30000
+            readTimeout = 30000
+            instanceFollowRedirects = true
+        }
+
         connection.connect()
 
+        // Check response code
+        val responseCode = connection.responseCode
+        Timber.d("Download HTTP response: $responseCode for songId: $songId")
+
+        if (responseCode !in 200..299) {
+            throw Exception("HTTP error $responseCode: ${connection.responseMessage}")
+        }
+
         val contentLength = connection.contentLength
+        Timber.d("Download content length: $contentLength bytes")
         var totalBytesRead = 0L
 
         connection.getInputStream().use { input ->
@@ -379,6 +408,8 @@ constructor(
                 }
             }
         }
+
+        Timber.d("Download completed: $totalBytesRead bytes written to ${outputFile.absolutePath}")
     }
 
     /**

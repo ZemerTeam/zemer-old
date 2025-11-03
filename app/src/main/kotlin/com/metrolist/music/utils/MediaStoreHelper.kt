@@ -152,6 +152,14 @@ class MediaStoreHelper(private val context: Context) {
                 return@withContext null
             }
 
+            val fileSize = tempFile.length()
+            Timber.d("Saving temp file to MediaStore: $fileName, size: $fileSize bytes, path: ${tempFile.absolutePath}")
+
+            if (fileSize == 0L) {
+                Timber.e("Temp file is empty: ${tempFile.absolutePath}")
+                return@withContext null
+            }
+
             tempFile.inputStream().use { inputStream ->
                 saveToMediaStore(
                     inputStream = inputStream,
