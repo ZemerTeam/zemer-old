@@ -48,6 +48,10 @@ constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // Legacy cache downloads (for compatibility)
+    private val cacheDownloads = MutableStateFlow<Map<String, Download>>(emptyMap())
+
+    // Unified downloads combining cache and MediaStore
     val downloads = MutableStateFlow<Map<String, Download>>(emptyMap())
 
     private val dataSourceFactory =
@@ -156,7 +160,7 @@ constructor(
                         download: Download,
                         finalException: Exception?,
                     ) {
-                        downloads.update { map ->
+                        cacheDownloads.update { map ->
                             map.toMutableMap().apply {
                                 set(download.request.id, download)
                             }
@@ -182,12 +186,58 @@ constructor(
         }
 
     init {
+        // Initialize cache downloads
         val result = mutableMapOf<String, Download>()
         val cursor = downloadManager.downloadIndex.getDownloads()
         while (cursor.moveToNext()) {
             result[cursor.download.request.id] = cursor.download
         }
-        downloads.value = result
+        cacheDownloads.value = result
+
+        // Merge cache downloads and MediaStore downloads into unified flow
+        scope.launch {
+            combine(
+                cacheDownloads,
+                mediaStoreDownloadManager.downloadStates
+            ) { cache, mediaStore ->
+                // Start with cache downloads
+                val merged = cache.toMutableMap()
+
+                // Add MediaStore downloads as fake Download objects
+                mediaStore.forEach { (songId, downloadState) ->
+                    merged[songId] = downloadState.toDownload()
+                }
+
+                merged.toMap()
+            }.collect { mergedDownloads ->
+                downloads.value = mergedDownloads
+            }
+        }
+    }
+
+    // Convert MediaStore DownloadState to Media3 Download (for UI compatibility)
+    private fun MediaStoreDownloadManager.DownloadState.toDownload(): Download {
+        val state = when (this.status) {
+            MediaStoreDownloadManager.DownloadState.Status.QUEUED -> Download.STATE_QUEUED
+            MediaStoreDownloadManager.DownloadState.Status.DOWNLOADING -> Download.STATE_DOWNLOADING
+            MediaStoreDownloadManager.DownloadState.Status.COMPLETED -> Download.STATE_COMPLETED
+            MediaStoreDownloadManager.DownloadState.Status.FAILED -> Download.STATE_FAILED
+            MediaStoreDownloadManager.DownloadState.Status.CANCELLED -> Download.STATE_STOPPED
+        }
+
+        val downloadRequest = androidx.media3.exoplayer.offline.DownloadRequest.Builder(songId, songId.toUri())
+            .setCustomCacheKey(songId)
+            .build()
+
+        return Download(
+            downloadRequest,
+            state,
+            /* startTimeMs = */ 0,
+            /* updateTimeMs = */ System.currentTimeMillis(),
+            /* contentLength = */ totalBytes,
+            /* stopReason = */ 0,
+            /* failureReason = */ if (state == Download.STATE_FAILED) Download.FAILURE_REASON_UNKNOWN else Download.FAILURE_REASON_NONE
+        )
     }
 
     fun getDownload(songId: String): Flow<Download?> = downloads.map { it[songId] }

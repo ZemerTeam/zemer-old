@@ -82,6 +82,7 @@ import com.metrolist.music.ui.component.ListDialog
 import com.metrolist.music.ui.component.NewAction
 import com.metrolist.music.ui.component.NewActionGrid
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlin.math.log2
 import kotlin.math.pow
@@ -105,8 +106,9 @@ fun PlayerMenu(
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
     val librarySong by database.song(mediaMetadata.id).collectAsState(initial = null)
     val coroutineScope = rememberCoroutineScope()
+    val downloadUtil = LocalDownloadUtil.current
 
-    val download by LocalDownloadUtil.current.getDownload(mediaMetadata.id)
+    val download by downloadUtil.getDownload(mediaMetadata.id)
         .collectAsState(initial = null)
 
     val artists =
@@ -372,21 +374,15 @@ fun PlayerMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            database.transaction {
-                                insert(mediaMetadata)
+                            coroutineScope.launch(Dispatchers.IO) {
+                                database.transaction {
+                                    insert(mediaMetadata)
+                                }
+                                val song = database.song(mediaMetadata.id).first()
+                                song?.let {
+                                    downloadUtil.downloadToMediaStore(it)
+                                }
                             }
-                            val downloadRequest =
-                                DownloadRequest
-                                    .Builder(mediaMetadata.id, mediaMetadata.id.toUri())
-                                    .setCustomCacheKey(mediaMetadata.id)
-                                    .setData(mediaMetadata.title.toByteArray())
-                                    .build()
-                            DownloadService.sendAddDownload(
-                                context,
-                                ExoDownloadService::class.java,
-                                downloadRequest,
-                                false,
-                            )
                         }
                     )
                 }

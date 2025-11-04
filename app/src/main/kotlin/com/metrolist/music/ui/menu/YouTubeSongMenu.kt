@@ -82,6 +82,7 @@ import com.metrolist.music.utils.joinByBullet
 import com.metrolist.music.utils.makeTimeString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -96,8 +97,9 @@ fun YouTubeSongMenu(
     val context = LocalContext.current
     val database = LocalDatabase.current
     val playerConnection = LocalPlayerConnection.current ?: return
+    val downloadUtil = LocalDownloadUtil.current
     val librarySong by database.song(song.id).collectAsState(initial = null)
-    val download by LocalDownloadUtil.current.getDownload(song.id).collectAsState(initial = null)
+    val download by downloadUtil.getDownload(song.id).collectAsState(initial = null)
     val coroutineScope = rememberCoroutineScope()
     val syncUtils = LocalSyncUtils.current
     val artists = remember {
@@ -453,20 +455,15 @@ fun YouTubeSongMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            database.transaction {
-                                insert(song.toMediaMetadata())
+                            coroutineScope.launch(Dispatchers.IO) {
+                                database.transaction {
+                                    insert(song.toMediaMetadata())
+                                }
+                                val dbSong = database.song(song.id).first()
+                                dbSong?.let {
+                                    downloadUtil.downloadToMediaStore(it)
+                                }
                             }
-                            val downloadRequest = DownloadRequest
-                                .Builder(song.id, song.id.toUri())
-                                .setCustomCacheKey(song.id)
-                                .setData(song.title.toByteArray())
-                                .build()
-                            DownloadService.sendAddDownload(
-                                context,
-                                ExoDownloadService::class.java,
-                                downloadRequest,
-                                false,
-                            )
                         }
                     )
                 }

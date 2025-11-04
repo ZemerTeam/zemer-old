@@ -76,6 +76,7 @@ import com.metrolist.music.utils.joinByBullet
 import com.metrolist.music.utils.makeTimeString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -509,17 +510,16 @@ fun YouTubePlaylistMenu(
                                 )
                             },
                             modifier = Modifier.clickable {
-                                songs.forEach { song ->
-                                    val downloadRequest = DownloadRequest.Builder(song.id, song.id.toUri())
-                                        .setCustomCacheKey(song.id)
-                                        .setData(song.title.toByteArray())
-                                        .build()
-                                    DownloadService.sendAddDownload(
-                                        context,
-                                        ExoDownloadService::class.java,
-                                        downloadRequest,
-                                        false
-                                    )
+                                coroutineScope.launch(Dispatchers.IO) {
+                                    songs.forEach { song ->
+                                        database.transaction {
+                                            insert(song.toMediaMetadata())
+                                        }
+                                        val dbSong = database.song(song.id).first()
+                                        dbSong?.let {
+                                            downloadUtil.downloadToMediaStore(it)
+                                        }
+                                    }
                                 }
                             }
                         )
