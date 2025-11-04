@@ -55,6 +55,7 @@ import com.metrolist.music.ui.component.DefaultDialog
 import com.metrolist.music.ui.component.NewAction
 import com.metrolist.music.ui.component.NewActionGrid
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -422,18 +423,7 @@ fun SelectionSongMenu(
                         },
                         modifier = Modifier.clickable {
                             songSelection.forEach { song ->
-                                val downloadRequest =
-                                    DownloadRequest
-                                        .Builder(song.id, song.id.toUri())
-                                        .setCustomCacheKey(song.id)
-                                        .setData(song.song.title.toByteArray())
-                                        .build()
-                                DownloadService.sendAddDownload(
-                                    context,
-                                    ExoDownloadService::class.java,
-                                    downloadRequest,
-                                    false,
-                                )
+                                downloadUtil.downloadToMediaStore(song)
                             }
                         }
                     )
@@ -784,19 +774,11 @@ fun SelectionMediaMetadataMenu(
                             )
                         },
                         modifier = Modifier.clickable {
-                            songSelection.forEach { song ->
-                                val downloadRequest =
-                                    DownloadRequest
-                                        .Builder(song.id, song.id.toUri())
-                                        .setCustomCacheKey(song.id)
-                                        .setData(song.title.toByteArray())
-                                        .build()
-                                DownloadService.sendAddDownload(
-                                    context,
-                                    ExoDownloadService::class.java,
-                                    downloadRequest,
-                                    false,
-                                )
+                            coroutineScope.launch(Dispatchers.IO) {
+                                songSelection.forEach { mediaMetadata ->
+                                    val song = database.song(mediaMetadata.id).first()
+                                    song?.let { downloadUtil.downloadToMediaStore(it) }
+                                }
                             }
                         }
                     )

@@ -162,6 +162,9 @@ class MusicService :
     lateinit var syncUtils: SyncUtils
 
     @Inject
+    lateinit var downloadUtil: DownloadUtil
+
+    @Inject
     lateinit var mediaLibrarySessionCallback: MediaLibrarySessionCallback
 
     private lateinit var audioManager: AudioManager
@@ -878,17 +881,7 @@ class MusicService :
                 // Check if auto-download on like is enabled and the song is now liked
                 if (dataStore.get(AutoDownloadOnLikeKey, false) && song.liked) {
                     // Trigger download for the liked song
-                    val downloadRequest = androidx.media3.exoplayer.offline.DownloadRequest
-                        .Builder(song.id, song.id.toUri())
-                        .setCustomCacheKey(song.id)
-                        .setData(song.title.toByteArray())
-                        .build()
-                    androidx.media3.exoplayer.offline.DownloadService.sendAddDownload(
-                        this@MusicService,
-                        ExoDownloadService::class.java,
-                        downloadRequest,
-                        false
-                    )
+                    downloadUtil.downloadToMediaStore(it)
                 }
             }
         }

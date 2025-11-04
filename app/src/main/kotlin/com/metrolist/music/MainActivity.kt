@@ -350,14 +350,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val checkForUpdates by rememberPreference(CheckForUpdatesKey, defaultValue = true)
+            val checkForUpdates by rememberPreference(CheckForUpdatesKey, defaultValue = false)
 
             LaunchedEffect(checkForUpdates) {
                 if (checkForUpdates) {
                     withContext(Dispatchers.IO) {
                         if (System.currentTimeMillis() - Updater.lastCheckTime > 1.days.inWholeMilliseconds) {
-                            val updatesEnabled = dataStore.get(CheckForUpdatesKey, true)
-                            val notifEnabled = dataStore.get(UpdateNotificationsEnabledKey, true)
+                            val updatesEnabled = dataStore.get(CheckForUpdatesKey, false)
+                            val notifEnabled = dataStore.get(UpdateNotificationsEnabledKey, false)
                             if (!updatesEnabled) return@withContext
                             Updater.getLatestVersionName().onSuccess {
                                 latestVersionName = it

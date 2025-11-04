@@ -335,21 +335,7 @@ fun TopPlaylistScreen(
                                                     IconButton(
                                                         onClick = {
                                                             songs!!.forEach { song ->
-                                                                val downloadRequest =
-                                                                    DownloadRequest
-                                                                        .Builder(
-                                                                            song.song.id,
-                                                                            song.song.id.toUri(),
-                                                                        )
-                                                                        .setCustomCacheKey(song.song.id)
-                                                                        .setData(song.song.title.toByteArray())
-                                                                        .build()
-                                                                DownloadService.sendAddDownload(
-                                                                    context,
-                                                                    ExoDownloadService::class.java,
-                                                                    downloadRequest,
-                                                                    false,
-                                                                )
+                                                                downloadUtil.downloadToMediaStore(song)
                                                             }
                                                         },
                                                     ) {

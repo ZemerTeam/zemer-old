@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +50,7 @@ import com.metrolist.music.R
 import com.metrolist.music.constants.ChipSortTypeKey
 import com.metrolist.music.constants.DarkModeKey
 import com.metrolist.music.constants.DefaultOpenTabKey
+import com.metrolist.music.constants.CustomDensityScaleKey
 import com.metrolist.music.constants.DensityScale
 import com.metrolist.music.constants.DensityScaleKey
 import com.metrolist.music.constants.DynamicThemeKey
@@ -80,6 +83,7 @@ import com.metrolist.music.constants.SwipeToRemoveSongKey
 import com.metrolist.music.ui.component.DefaultDialog
 import com.metrolist.music.ui.component.EnumListPreference
 import com.metrolist.music.ui.component.IconButton
+import com.metrolist.music.ui.component.TextFieldDialog
 import com.metrolist.music.ui.component.ListPreference
 import com.metrolist.music.ui.component.PlayerSliderTrack
 import com.metrolist.music.ui.component.PreferenceEntry
@@ -124,17 +128,25 @@ fun AppearanceSettings(
         )
     val (pureBlack, onPureBlackChange) = rememberPreference(PureBlackKey, defaultValue = false)
     val (densityScale, setDensityScale) = rememberPreference(DensityScaleKey, defaultValue = 1.0f)
+    val (customDensityValue, setCustomDensityValue) = rememberPreference(CustomDensityScaleKey, defaultValue = 0.85f)
     val context = LocalContext.current
     var showRestartDialog by rememberSaveable { mutableStateOf(false) }
+    var showCustomDensityDialog by rememberSaveable { mutableStateOf(false) }
 
     val onDensityScaleChange: (Float) -> Unit = { newScale ->
-        setDensityScale(newScale)
-        // Also write to SharedPreferences for DensityScaler to read on next startup
-        context.getSharedPreferences("metrolist_settings", android.content.Context.MODE_PRIVATE)
-            .edit()
-            .putFloat("density_scale_factor", newScale)
-            .apply()
-        showRestartDialog = true
+        if (newScale == -1f) {
+            // Custom option selected - show dialog for input
+            showCustomDensityDialog = true
+        } else {
+            // Preset option selected - apply immediately
+            setDensityScale(newScale)
+            // Also write to SharedPreferences for DensityScaler to read on next startup
+            context.getSharedPreferences("metrolist_settings", android.content.Context.MODE_PRIVATE)
+                .edit()
+                .putFloat("density_scale_factor", newScale)
+                .apply()
+            showRestartDialog = true
+        }
     }
 
     val (defaultOpenTab, onDefaultOpenTabChange) = rememberEnumPreference(
@@ -405,7 +417,13 @@ fun AppearanceSettings(
             selectedValue = densityScale,
             values = DensityScale.entries.map { it.value },
             valueText = { scale ->
-                DensityScale.fromValue(scale).label
+                val densityEnum = DensityScale.fromValue(scale)
+                if (densityEnum == DensityScale.CUSTOM) {
+                    // Show the actual custom percentage value
+                    "Custom (${(customDensityValue * 100).toInt()}%)"
+                } else {
+                    densityEnum.label
+                }
             },
             onValueSelected = onDensityScaleChange,
         )
@@ -695,6 +713,48 @@ fun AppearanceSettings(
             icon = { Icon(painterResource(R.drawable.backup), null) },
             checked = showUploadedPlaylist,
             onCheckedChange = onShowUploadedPlaylistChange
+        )
+    }
+
+    if (showCustomDensityDialog) {
+        TextFieldDialog(
+            onDismiss = { showCustomDensityDialog = false },
+            title = { Text("Custom Display Density") },
+            icon = { Icon(painterResource(R.drawable.grid_view), null) },
+            initialTextFieldValue = androidx.compose.ui.text.input.TextFieldValue((customDensityValue * 100).toInt().toString()),
+            keyboardType = KeyboardType.Decimal,
+            isInputValid = { input ->
+                val value = input.toFloatOrNull()?.let { percent ->
+                    if (percent > 1.5f) percent / 100f else percent
+                }
+                value != null && value in 0.5f..1.2f
+            },
+            onDone = { input ->
+                val value = input.toFloatOrNull()?.let { percent ->
+                    // Accept both percentage (85) and decimal (0.85) format
+                    if (percent > 1.5f) percent / 100f else percent
+                }
+
+                if (value != null && value in 0.5f..1.2f) {
+                    setCustomDensityValue(value)
+                    setDensityScale(value)
+
+                    // Write to SharedPreferences
+                    context.getSharedPreferences("metrolist_settings", android.content.Context.MODE_PRIVATE)
+                        .edit()
+                        .putFloat("density_scale_factor", value)
+                        .apply()
+
+                    showCustomDensityDialog = false
+                    showRestartDialog = true
+                }
+            },
+            extraContent = {
+                Text(
+                    text = "Enter a value between 50% and 120%.\n\nExamples: 85 or 0.85 for 85%",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         )
     }
 
