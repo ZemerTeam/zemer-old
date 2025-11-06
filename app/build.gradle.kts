@@ -22,7 +22,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
-        ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
         buildConfigField("String", "ARCHITECTURE", "\"universal\"")
     }
 
