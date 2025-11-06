@@ -22,9 +22,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         multiDexEnabled = true
-        resourceConfigurations += listOf("en", "iw")
         ndk { abiFilters += listOf("armeabi-v7a", "arm64-v8a") }
         buildConfigField("String", "ARCHITECTURE", "\"universal\"")
+    }
+
+    androidResources {
+        localeFilters += listOf("en", "iw")
     }
 
     signingConfigs {
