@@ -465,13 +465,11 @@ class MainActivity : ComponentActivity() {
 
                     // Check whitelist sync status
                     val syncProgress by syncUtils.whitelistSyncProgress.collectAsState()
-                    val (skipSplash, setSkipSplash) = remember { mutableStateOf(false) }
 
-                    // Show splash screen while syncing (unless user skipped)
-                    if (!syncProgress.isComplete && !skipSplash) {
+                    // Show splash screen while syncing
+                    if (!syncProgress.isComplete) {
                         SplashScreen(
                             syncProgress = syncProgress,
-                            onSkip = { setSkipSplash(true) }
                         )
                         return@BoxWithConstraints
                     }
