@@ -164,8 +164,9 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 dependencies {
+    implementation(libs.guava)
+    implementation(libs.coroutines.guava)
     implementation(libs.concurrent.futures)
-    implementation(libs.listenablefuture)
 
     implementation(libs.activity)
     implementation(libs.hilt.navigation)
