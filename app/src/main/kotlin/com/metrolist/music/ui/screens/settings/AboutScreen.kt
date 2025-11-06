@@ -69,7 +69,7 @@ fun AboutScreen(
         Spacer(Modifier.height(4.dp))
 
         Image(
-            painter = painterResource(R.mipmap.ic_launcher),
+            painter = painterResource(R.mipmap.ic_launcher_foreground),
             contentDescription = null,
             modifier = Modifier
                 .size(96.dp)
