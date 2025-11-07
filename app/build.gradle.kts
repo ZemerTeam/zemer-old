@@ -21,6 +21,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+        multiDexEnabled = true
+    }
+
+    androidResources {
+        localeFilters += listOf("en", "iw")
     }
 
     flavorDimensions += "abi"
