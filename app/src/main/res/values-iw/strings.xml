@@ -19,7 +19,6 @@
     <string name="forgotten_favorites">מועדפים שנשכחו</string>
     <string name="keep_listening">המשך האזנה</string>
     <string name="your_youtube_playlists">פלייליסטים ביוטיוב שלך</string>
-    <string name="similar_to">דומה ל</string>
     <string name="new_release_albums">אלבומים חדשים</string>
     <string name="today">היום</string>
     <string name="yesterday">אתמול</string>
@@ -31,6 +30,7 @@
     <string name="search">חיפוש</string>
     <string name="search_yt_music">חפש ביוטיוב מוזיקה…</string>
     <string name="search_library">חפש בספרייה…</string>
+    <string name="search_artists">חפש אמנים…</string>
     <string name="filter_library">ספרייה</string>
     <string name="filter_liked">אהבתי</string>
     <string name="filter_downloaded">ירדו</string>
@@ -71,6 +71,19 @@
     <string name="action_download">הורד</string>
     <string name="downloading">מוריד</string>
     <string name="remove_download">הסר הורדה</string>
+    <!-- MediaStore downloads -->
+    <string name="download_to_device">הורד למכשיר</string>
+    <string name="downloading_to_device">מוריד</string>
+    <string name="downloaded_to_device">הורד</string>
+    <string name="download_failed">ההורדה נכשלה</string>
+    <string name="retry_download">נסה שוב להוריד</string>
+    <string name="cancel_download">בטל הורדה</string>
+    <string name="remove_from_device">הסר מהמכשיר</string>
+    <string name="storage_permission_required">נדרשת הרשאת אחסון</string>
+    <string name="storage_permission_rationale">האפליקציה דורשת הרשאת אחסון כדי להוריד מוזיקה לתיקיית המוזיקה במכשיר.</string>
+    <string name="mediastore_downloads">הורדות במכשיר</string>
+    <string name="mediastore_size">שטח אחסון שנוצל</string>
+    <string name="clear_mediastore_downloads">נקה הורדות מהמכשיר</string>
     <string name="import_playlist">ייבוא פלייליסט</string>
     <string name="add_to_playlist">הוסף לפלייליסט</string>
     <string name="view_artist">הצג אמן</string>
@@ -83,6 +96,7 @@
     <string name="remove_from_queue">הסר מהתור</string>
     <string name="search_online">חיפוש באינטרנט</string>
     <string name="action_sync">סינכרון</string>
+    <string name="syncing_artists">מסנכרן אמנים…</string>
     <string name="advanced">מתקדם</string>
     <string name="tempo_and_pitch">קצב וגובה צליל</string>
     <string name="sort_by_create_date">תאריך הוספה</string>
@@ -226,6 +240,31 @@
     <string name="proxy_url">כתובת פרוקסי</string>
     <string name="restart_to_take_effect">הפעל מחדש כדי שיכנס לתוקף</string>
     <string name="player_and_audio">נגן ושמע</string>
+    <string name="settings_button_setup">הגדרת כפתורי ה-D-pad</string>
+    <string name="settings_button_setup_desc">הקצה את כפתורי ה-D-pad במכשיר</string>
+    <string name="dpad_setup_title">הגדרת ה-D-pad שלך</string>
+    <string name="dpad_setup_description">לכוד את החיצים ואת הכפתור המרכזי ב-D-pad של המכשיר. נעבור לכיוון הבא מיד כשהוא יזוהה.</string>
+    <string name="dpad_setup_start">התחל</string>
+    <string name="dpad_setup_skip">דלג</string>
+    <string name="dpad_setup_listening">לחץ על %1$s ב-D-pad</string>
+    <string name="dpad_setup_step_progress">צעד %1$d מתוך %2$d</string>
+    <string name="dpad_setup_auto_hint">נעבור לכיוון הבא מיד כשנזהה לחיצה.</string>
+    <string name="dpad_setup_press_any_key">לחץ על כל מקש כדי להתחיל</string>
+    <string name="dpad_setup_listening_hint">ממתינים לכיוון המבוקש.</string>
+    <string name="dpad_setup_skip_direction">דלג על כיוון זה</string>
+    <string name="dpad_setup_cancel">בטל</string>
+    <string name="dpad_setup_completed">כפתורי ה-D-pad נשמרו</string>
+    <string name="dpad_setup_completed_hint">הערכים נשמרו. נסגור מסך זה אוטומטית.</string>
+    <string name="dpad_setup_done">סיום</string>
+    <string name="dpad_setup_again">הגדר מחדש</string>
+    <string name="dpad_current_mapping">מיפוי נוכחי</string>
+    <string name="dpad_mapping_not_set">לא הוגדר</string>
+    <string name="dpad_clear_button">נקה</string>
+    <string name="dpad_direction_right">ימינה</string>
+    <string name="dpad_direction_left">שמאלה</string>
+    <string name="dpad_direction_up">מעלה</string>
+    <string name="dpad_direction_down">מטה</string>
+    <string name="dpad_direction_center">מרכז</string>
     <string name="audio_quality">איכות שמע</string>
     <string name="audio_quality_auto">אוטומטי</string>
     <string name="audio_quality_high">גבוה</string>
@@ -287,4 +326,7 @@
     <string name="new_version_available">גירסה חדשה זמינה</string>
     <string name="translation_models">מודלים של תרגום</string>
     <string name="clear_translation_models">ניקוי מודלי תרגום</string>
+    <string name="accessibility_service_description">אפשר ל-Zemer לזהות לחיצות על כפתורי חומרה עבור מיפויים מותאמים אישית.</string>
+    <string name="button_setup_accessibility_required">יש להפעיל את שירות הנגישות של Zemer כדי להגדיר כפתורי חומרה.</string>
+    <string name="button_setup_enable_accessibility">הפעל</string>
 </resources>

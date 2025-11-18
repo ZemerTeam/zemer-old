@@ -3,13 +3,31 @@ package com.metrolist.music.ui.component
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 
@@ -73,10 +91,11 @@ private fun Material3SettingsItemRow(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .clickable(
-                    enabled = item.onClick != null,
+                    enabled = item.onClick != null && item.enabled,
                     onClick = { item.onClick?.invoke() }
                 )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .alpha(if (item.enabled) 1f else 0.5f),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Icon with background
@@ -173,5 +192,6 @@ data class Material3SettingsItem(
     val trailingContent: (@Composable () -> Unit)? = null,
     val showBadge: Boolean = false,
     val isHighlighted: Boolean = false,
-    val onClick: (() -> Unit)? = null
+    val onClick: (() -> Unit)? = null,
+    val enabled: Boolean = true
 )

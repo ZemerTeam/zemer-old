@@ -1,4 +1,4 @@
-package com.metrolist.music.ui.screens
+﻿package com.metrolist.music.ui.screens
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -58,6 +58,7 @@ import com.metrolist.music.ui.screens.search.OnlineSearchResult
 import com.metrolist.music.ui.screens.settings.AboutScreen
 import com.metrolist.music.ui.screens.settings.AppearanceSettings
 import com.metrolist.music.ui.screens.settings.BackupAndRestore
+import com.metrolist.music.ui.screens.settings.ButtonSetupScreen
 import com.metrolist.music.ui.screens.settings.ContentSettings
 import com.metrolist.music.ui.screens.settings.DarkMode
 import com.metrolist.music.ui.screens.settings.integrations.IntegrationScreen
@@ -298,6 +299,10 @@ fun NavGraphBuilder.navigationBuilder(
     composable("settings/player") {
         PlayerSettings(navController, scrollBehavior)
     }
+    composable("settings/dpad") {
+        ButtonSetupScreen(navController, scrollBehavior)
+    }
+
     composable("settings/storage") {
         StorageSettings(navController, scrollBehavior)
     }
@@ -317,3 +322,5 @@ fun NavGraphBuilder.navigationBuilder(
         AboutScreen(navController, scrollBehavior)
     }
 }
+
+

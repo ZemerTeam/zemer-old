@@ -1,4 +1,4 @@
-package com.metrolist.music.constants
+﻿package com.metrolist.music.constants
 
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.floatPreferencesKey
@@ -23,6 +23,11 @@ val UseNewPlayerDesignKey= booleanPreferencesKey("useNewPlayerDesign")
 val UseNewMiniPlayerDesignKey = booleanPreferencesKey("useNewMiniPlayerDesign")
 val HidePlayerThumbnailKey = booleanPreferencesKey("hidePlayerThumbnail")
 val SeekExtraSeconds = booleanPreferencesKey("seekExtraSeconds")
+val ButtonDpadRightKey = intPreferencesKey("buttonDpadRight")
+val ButtonDpadLeftKey = intPreferencesKey("buttonDpadLeft")
+val ButtonDpadUpKey = intPreferencesKey("buttonDpadUp")
+val ButtonDpadDownKey = intPreferencesKey("buttonDpadDown")
+val ButtonDpadCenterKey = intPreferencesKey("buttonDpadCenter")
 
 enum class DensityScale(val value: Float, val label: String) {
     NATIVE(1.0f, "Native (100%)"),
@@ -513,3 +518,4 @@ val CountryCodeToName =
         "YE" to "Yemen",
         "ZW" to "Zimbabwe",
     )
+
